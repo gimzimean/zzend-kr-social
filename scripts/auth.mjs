@@ -43,7 +43,7 @@ if (platform === 'instagram' && !code) {
 } else if (platform === 'threads' && !code) {
   const url = `https://threads.net/oauth/authorize?${new URLSearchParams({
     client_id: env('THREADS_APP_ID'), redirect_uri: REDIRECT, response_type: 'code',
-    scope: 'threads_basic,threads_content_publish,threads_manage_replies', state: 'threads',
+    scope: 'threads_basic,threads_content_publish,threads_manage_replies,threads_read_replies,threads_manage_mentions', state: 'threads',
   })}`;
   console.log(url);
   execSync(`start "" "${url}"`, { shell: 'cmd.exe' });
