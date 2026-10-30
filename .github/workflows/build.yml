@@ -1,0 +1,30 @@
+name: build
+# content.json 에 새 게시물이 들어오면 카드·스토리 이미지를 만들어 docs/ 에 넣는다(Pages 로 공개).
+on:
+  push:
+    branches: [main]
+    paths: [content.json, scripts/build.mjs]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: post
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 한글 글꼴·playwright
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q fonts-noto-cjk
+          npm i --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - run: node scripts/build.mjs
+      - name: 이미지 저장
+        run: |
+          git config user.name "topnote-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs
+          git diff --cached --quiet || (git commit -m "새 카드 이미지" && git pull --rebase && git push)

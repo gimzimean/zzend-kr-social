@@ -1,0 +1,35 @@
+name: post
+# 화·목·토 20:00 KST(11:00 UTC)에 다음 게시물을 인스타 피드·스토리·스레드·틱톡에 올린다.
+on:
+  schedule:
+    - cron: '0 11 * * 2,4,6'
+  workflow_dispatch:
+    inputs:
+      only:
+        description: 'instagram · story · threads · tiktok 중 하나만 (비우면 전부)'
+        required: false
+permissions:
+  contents: write
+concurrency: post
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 올리기
+        env:
+          TOKEN_KEY: ${{ secrets.TOKEN_KEY }}
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_MODE: ${{ vars.TIKTOK_MODE }}
+        run: node scripts/post.mjs ${{ inputs.only && format('--only {0}', inputs.only) || '' }}
+      - name: 올린 기록·새 토큰 저장
+        if: always()
+        run: |
+          git config user.name "topnote-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add state.json tokens.enc 2>/dev/null || true
+          git diff --cached --quiet || (git commit -m "올린 기록 갱신" && git push)
